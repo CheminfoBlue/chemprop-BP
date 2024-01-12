@@ -222,6 +222,8 @@ class MPN(nn.Module):
         self.bond_descriptors = args.bond_descriptors
         self.overwrite_default_atom_features = args.overwrite_default_atom_features
         self.overwrite_default_bond_features = args.overwrite_default_bond_features
+        # Activation
+        self.act_func = get_activation_function(args.activation)
 
         if self.features_only:
             return
@@ -243,6 +245,22 @@ class MPN(nn.Module):
                                                    is_reaction=False)
             self.encoder_solvent = MPNEncoder(args, self.atom_fdim_solvent, self.bond_fdim_solvent,
                                               args.hidden_size_solvent, args.bias_solvent, args.depth_solvent)
+        
+        # if self.use_input_features:
+        #     # print('Creating additional feature ffn - in (%d) h1 (%d), h2 (%d)'%(args.features_size, args.in_feat_outdim0))
+        #     # self.in_feat_ffn = nn.Linear(in_features=args.features_size, out_features=args.in_feat_outdim)
+        #     # self.in_feat_ffn = nn.Sequential(
+        #     #     nn.Linear(in_features=args.features_size, out_features=int(2*args.in_feat_outdim)),
+        #     #     self.act_func,
+        #     #     nn.Linear(in_features=int(2*args.in_feat_outdim), out_features=args.in_feat_outdim),
+        #     #     self.act_func
+        #     # )
+        #     self.in_feat_ffn = nn.Sequential(
+        #         nn.Linear(in_features=args.features_size, out_features=args.in_feat_outdim0),
+        #         self.act_func,
+        #         nn.Linear(in_features=args.in_feat_outdim0, out_features=args.in_feat_outdim1)
+        #     )
+                          
 
     def forward(self,
                 batch: Union[List[List[str]], List[List[Chem.Mol]], List[List[Tuple[Chem.Mol, Chem.Mol]]], List[BatchMolGraph]],
@@ -330,7 +348,8 @@ class MPN(nn.Module):
         if self.use_input_features:
             if len(features_batch.shape) == 1:
                 features_batch = features_batch.view(1, -1)
-
             output = torch.cat([output, features_batch], dim=1)
+            # feat_out = self.in_feat_ffn(features_batch)
+            # output = torch.cat([output, feat_out], dim=1)
 
         return output

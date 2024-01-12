@@ -14,7 +14,10 @@ def get_loss_func(args: TrainArgs) -> Callable:
     :param args: Arguments containing the dataset type ("classification", "regression", or "multiclass").
     :return: A PyTorch loss function.
     """
-
+    if args.class_weights is not None:
+        class_weights = args.class_weights
+    else:
+        class_weights = None
     # Nested dictionary of the form {dataset_type: {loss_function: loss_function callable}}
     supported_loss_functions = {
         "regression": {
@@ -29,7 +32,7 @@ def get_loss_func(args: TrainArgs) -> Callable:
             "dirichlet": dirichlet_class_loss,
         },
         "multiclass": {
-            "cross_entropy": nn.CrossEntropyLoss(reduction="none"),
+            "cross_entropy": nn.CrossEntropyLoss(weight=class_weights, reduction="none"),
             "mcc": mcc_multiclass_loss,
             "dirichlet": dirichlet_multiclass_loss,
         },
@@ -48,6 +51,8 @@ def get_loss_func(args: TrainArgs) -> Callable:
     loss_function = loss_function_choices.get(args.loss_function)
 
     if loss_function is not None:
+        print('Loss function: ', loss_function)
+        print('Using class weights: ', loss_function.weight)
         return loss_function
 
     else:

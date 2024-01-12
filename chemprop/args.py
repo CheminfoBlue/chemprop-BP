@@ -16,8 +16,7 @@ from chemprop.data import set_cache_mol, empty_cache
 from chemprop.features import get_available_features_generators
 
 
-Metric = Literal['auc', 'prc-auc', 'rmse', 'mae', 'mse', 'r2', 'accuracy', 'cross_entropy', 'binary_cross_entropy', 'sid', 'wasserstein', 'f1', 'mcc', 'bounded_rmse', 'bounded_mae', 'bounded_mse',
-                'recall', 'precision','balanced_accuracy']
+Metric = Literal['auc', 'prc-auc', 'rmse', 'mae', 'mse', 'r2', 'accuracy', 'cross_entropy', 'binary_cross_entropy', 'sid', 'wasserstein', 'f1', 'mcc', 'bounded_rmse', 'bounded_mae', 'bounded_mse']
 
 
 def get_checkpoint_paths(checkpoint_path: Optional[str] = None,
@@ -263,6 +262,10 @@ class TrainArgs(CommonArgs):
     """Choice of loss function. Loss functions are limited to compatible dataset types."""
     multiclass_num_classes: int = 3
     """Number of classes when running multiclass classification."""
+    class_weighted_loss: bool = False
+    """Whether to apply class weightings to loss function for multiclass classification."""
+    class_weights: List[float] = None
+    """List of class weights to apply to loss function for multiclass classification."""
     separate_val_path: str = None
     """Path to separate val set, optional."""
     separate_test_path: str = None
@@ -273,7 +276,7 @@ class TrainArgs(CommonArgs):
     """Path to weights for each molecule in the training data, affecting the relative weight of molecules in the loss function"""
     target_weights: List[float] = None
     """Weights associated with each target, affecting the relative weight of targets in the loss function. Must match the number of target columns."""
-    split_type: Literal['random', 'scaffold_balanced', 'predetermined', 'crossval', 'cv', 'cv-no-test', 'index_predetermined', 'random_with_repeated_smiles', 'molecular_weight'] = 'random'
+    split_type: Literal['random', 'scaffold_balanced', 'predetermined', 'crossval', 'cv', 'cv-no-test', 'index_predetermined', 'random_with_repeated_smiles'] = 'random'
     """Method of splitting the data into train/val/test."""
     split_sizes: List[float] = None
     """Split proportions for train/validation/test sets."""
@@ -355,6 +358,10 @@ class TrainArgs(CommonArgs):
     """Dropout probability."""
     activation: Literal['ReLU', 'LeakyReLU', 'PReLU', 'tanh', 'SELU', 'ELU'] = 'ReLU'
     """Activation function."""
+    in_feat_outdim0: int = 300
+    """additional feature out dim (ffn)."""
+    in_feat_outdim1: int = 300
+    """additional feature out dim (ffn)."""
     atom_messages: bool = False
     """Centers messages on atoms instead of on bonds."""
     undirected: bool = False
@@ -445,6 +452,10 @@ class TrainArgs(CommonArgs):
     """
     Whether the bond types determined by RDKit molecules added to the output of bond targets. This option is intended to be used
     with the :code:`is_atom_bond_targets`.
+    """
+    task_specific_ffn: bool = False
+    """
+    Whether to use task-specific FFNs for multi-task learning framework. False - use shared FFN across all tasks.
     """
 
     # Training arguments
@@ -709,7 +720,7 @@ class TrainArgs(CommonArgs):
                              f'Please only include it once.')
 
         for metric in self.metrics:
-            if not any([(self.dataset_type == 'classification' and metric in ['auc', 'prc-auc', 'accuracy', 'binary_cross_entropy', 'f1', 'mcc', 'recall', 'precision', 'balanced_accuracy', 'confusion_matrix']),
+            if not any([(self.dataset_type == 'classification' and metric in ['auc', 'prc-auc', 'accuracy', 'binary_cross_entropy', 'f1', 'mcc']),
                         (self.dataset_type == 'regression' and metric in ['rmse', 'mae', 'mse', 'r2', 'bounded_rmse', 'bounded_mae', 'bounded_mse']),
                         (self.dataset_type == 'multiclass' and metric in ['cross_entropy', 'accuracy', 'f1', 'mcc']),
                         (self.dataset_type == 'spectra' and metric in ['sid', 'wasserstein'])]):
@@ -887,7 +898,6 @@ class PredictArgs(CommonArgs):
         'classification',
         'dropout',
         'spectra_roundrobin',
-        'dirichlet',
     ] = None
     """The method of calculating uncertainty."""
     calibration_method: Literal['zscaling', 'tscaling', 'zelikman_interval', 'mve_weighting', 'platt', 'isotonic'] = None
@@ -1080,12 +1090,12 @@ class HyperoptArgs(TrainArgs):
         supported_keywords = [
             "basic", "learning_rate", "linked_hidden_size", "all",
             "activation", "aggregation", "aggregation_norm", "batch_size", "depth",
-            "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr", "hidden_size",
+            "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr", "hidden_size", "in_feat_outdim0", "in_feat_outdim1",
             "init_lr", "max_lr", "warmup_epochs"
         ]
         supported_parameters = [
             "activation", "aggregation", "aggregation_norm", "batch_size", "depth",
-            "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr_ratio", "hidden_size",
+            "dropout", "ffn_hidden_size", "ffn_num_layers", "final_lr_ratio", "hidden_size", "in_feat_outdim0", "in_feat_outdim1",
             "init_lr_ratio", "linked_hidden_size", "max_lr", "warmup_epochs"
         ]
         unsupported_keywords = set(self.search_parameter_keywords) - set(supported_keywords)
@@ -1100,7 +1110,7 @@ class HyperoptArgs(TrainArgs):
         if "all" in self.search_parameter_keywords:
             search_parameters.update(supported_parameters)
         if "basic" in self.search_parameter_keywords:
-            search_parameters.update(["depth", "ffn_num_layers", "dropout", "linked_hidden_size"])
+            search_parameters.update(["depth", "ffn_num_layers", "dropout", "linked_hidden_size", "in_feat_outdim0", "in_feat_outdim1"])
         if "learning_rate" in self.search_parameter_keywords:
             search_parameters.update(["max_lr", "init_lr_ratio", "final_lr_ratio", "warmup_epochs"])
         for kw in self.search_parameter_keywords:

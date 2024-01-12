@@ -657,6 +657,7 @@ def get_inequality_targets(path: str, target_columns: List[str] = None) -> List[
 
     return gt_targets, lt_targets
 
+
 def split_data(data: MoleculeDataset,
                split_type: str = 'random',
                sizes: Tuple[float, float, float] = (0.8, 0.1, 0.1),
@@ -818,24 +819,7 @@ def split_data(data: MoleculeDataset,
         test = [data[i] for i in indices[train_val_size:]]
 
         return MoleculeDataset(train), MoleculeDataset(val), MoleculeDataset(test)
-    elif split_type == 'molecular_weight':
-        train_size, val_size, test_size = [int(size * len(data)) for size in sizes]
 
-        sorted_data = sorted(data._data, key=lambda x: x.max_molwt, reverse=False)
-        indices = list(range(len(sorted_data)))
-
-        train_end_idx = int(train_size)
-        val_end_idx = int(train_size + val_size)
-        train_indices = indices[:train_end_idx]
-        val_indices = indices[train_end_idx:val_end_idx]
-        test_indices = indices[val_end_idx:]
-
-        # Create MoleculeDataset for each split
-        train = MoleculeDataset([sorted_data[i] for i in train_indices])
-        val = MoleculeDataset([sorted_data[i] for i in val_indices])
-        test = MoleculeDataset([sorted_data[i] for i in test_indices])
-
-        return train, val, test
     else:
         raise ValueError(f'split_type "{split_type}" not supported.')
 
@@ -962,3 +946,31 @@ def validate_data(data_path: str) -> Set[str]:
             errors.add('Found a target which is not a number.')
 
     return errors
+
+
+
+#computes class weights for single or multiple targets/tasks
+#for single task scenario, returns vector: K (# classes) x 1 (# targets/tasks) 
+#for multitask scenario, returns matrix: K (# classes) x T (# targets/tasks) 
+def compute_class_weights(data: MoleculeDataset, reduction: str = None):
+    print('computing class weights')
+    y = np.array(data.targets(), dtype=np.float64)
+    print(y.shape)
+    classes, total_counts = np.unique(y[~np.isnan(y)], return_counts=True)
+    classes = classes.astype(np.int64)
+    n_classes = len(classes)
+    print('unique classes: ', classes)
+    print('total counts: ', total_counts)
+    # print(y.shape)
+    class_counts = np.array([np.unique(y[:,t][~np.isnan(y[:,t])], return_counts=True)[1] for t in range(y.shape[1])]).T
+    print('class counts: ', class_counts)
+    n_samples = class_counts.sum(0)
+    class_weights = n_samples / (n_classes*class_counts)
+    print('class weights: ', class_weights)
+
+    if reduction=='mean':
+        return np.mean(class_weights, axis=1)
+    elif reduction=='median':
+        return np.median(class_weights, axis=1)
+    else:
+        return class_weights

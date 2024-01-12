@@ -49,6 +49,8 @@ def hyperopt(args: HyperoptArgs) -> None:
         "ffn_hidden_size",
         "ffn_num_layers",
         "hidden_size",
+        "in_feat_outdim0",
+        "in_feat_outdim1",
         "linked_hidden_size",
         "warmup_epochs",
     ]

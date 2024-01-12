@@ -19,7 +19,7 @@ from .loss_functions import get_loss_func
 from chemprop.spectra_utils import normalize_spectra, load_phase_mask
 from chemprop.args import TrainArgs
 from chemprop.constants import MODEL_FILE_NAME
-from chemprop.data import get_class_sizes, get_data, MoleculeDataLoader, MoleculeDataset, set_cache_graph, split_data
+from chemprop.data import get_class_sizes, get_data, MoleculeDataLoader, MoleculeDataset, set_cache_graph, split_data, compute_class_weights
 from chemprop.models import MoleculeModel
 from chemprop.nn_utils import param_count, param_count_all
 from chemprop.utils import build_optimizer, build_lr_scheduler, load_checkpoint, makedirs, \
@@ -110,6 +110,19 @@ def run_training(args: TrainArgs,
                   f'{", ".join(f"{cls}: {size * 100:.2f}%" for cls, size in enumerate(task_class_sizes))}')
         train_class_sizes = get_class_sizes(train_data, proportion=False)
         args.train_class_sizes = train_class_sizes
+
+    if args.class_weighted_loss & (args.dataset_type in ['classification', 'multiclass']):
+        args.class_weights = compute_class_weights(train_data, reduction='median')
+        args.class_weights = torch.Tensor(args.class_weights).to(args.device)
+        # args.class_weights = torch.tensor(args.class_weights, 
+        #                                   dtype=torch.float64, 
+        #                                   device=args.device)
+        print('class weights: ', args.class_weights)
+        print('class weights size: ', args.class_weights.size())
+
+        
+        
+
 
     if args.save_smiles_splits:
         save_smiles_splits(
@@ -258,6 +271,13 @@ def run_training(args: TrainArgs,
         else:
             debug(f'Building model {model_idx}')
             model = MoleculeModel(args)
+            # if args.task_specific_ffn:
+            #     for t in args.num_tasks:
+            #         model = MoleculeModel(args)
+            #         model.num_tasks = 1
+            #         models += [model]
+            # else:
+            #     model = MoleculeModel(args)
 
         # Optionally, overwrite weights:
         if args.checkpoint_frzn is not None:

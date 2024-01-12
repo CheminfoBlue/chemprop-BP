@@ -859,8 +859,7 @@ def multitask_mean(
     scale_dependent_metrics = ["rmse", "mae", "mse", "bounded_rmse", "bounded_mae", "bounded_mse"]
     nonscale_dependent_metrics = [
         "auc", "prc-auc", "r2", "accuracy", "cross_entropy",
-        "binary_cross_entropy", "sid", "wasserstein", "f1", "mcc", "recall", "precision", "balanced_accuracy", "confusion_matrix"
-
+        "binary_cross_entropy", "sid", "wasserstein", "f1", "mcc",
     ]
 
     if metric in scale_dependent_metrics:
