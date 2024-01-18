@@ -14,3 +14,5 @@ Example: ```chemprop_train --data_path <data_path> --dataset_type multiclass --m
 
 (2) Task specific layers/towers - flag: --task_specific_ffn <br>
 Example: ```chemprop_train --data_path <data_path> --dataset_type classification --task_specific_ffn```
+
+(3) Multi-layer FFN - arguments: 
