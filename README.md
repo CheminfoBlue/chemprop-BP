@@ -11,3 +11,6 @@ In this repository we update and build upon the Chemprop codebase with certain d
 
 (1) Class weighted loss (cross entropy) - flag: --class_weighted_loss <br>
 Example: ```chemprop_train --data_path <data_path> --dataset_type multiclass --multiclass_num_classes 3 --class_weighted_loss```
+
+(2) Task specific layers/towers - flag: --task_specific_ffn <br>
+Example: ```chemprop_train --data_path <data_path> --dataset_type classification --task_specific_ffn```
