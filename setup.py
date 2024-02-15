@@ -7,7 +7,7 @@ with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="chemprop",
+    name="chemprop-BP",
     author="The Chemprop Development Team (see LICENSE.txt)",
     author_email="chemprop@mit.edu",
     description="Molecular Property Prediction with Message Passing Neural Networks",
