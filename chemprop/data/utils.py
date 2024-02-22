@@ -344,6 +344,7 @@ def get_data(path: str,
              smiles_columns: Union[str, List[str]] = None,
              target_columns: List[str] = None,
              ignore_columns: List[str] = None,
+             split_column: str = None,
              skip_invalid_smiles: bool = True,
              args: Union[TrainArgs, PredictArgs] = None,
              data_weights_path: str = None,
@@ -394,6 +395,7 @@ def get_data(path: str,
         smiles_columns = smiles_columns if smiles_columns is not None else args.smiles_columns
         target_columns = target_columns if target_columns is not None else args.target_columns
         ignore_columns = ignore_columns if ignore_columns is not None else args.ignore_columns
+        split_column = split_column if split_column is not None else args.split_column
         features_path = features_path if features_path is not None else args.features_path
         features_generator = features_generator if features_generator is not None else args.features_generator
         phase_features_path = phase_features_path if phase_features_path is not None else args.phase_features_path
@@ -471,10 +473,14 @@ def get_data(path: str,
             raise ValueError(f'Data file did not contain all provided smiles columns: {smiles_columns}. Data file field names are: {fieldnames}')
         if any([c not in fieldnames for c in target_columns]):
             raise ValueError(f'Data file did not contain all provided target columns: {target_columns}. Data file field names are: {fieldnames}')
+        # if split_column not in fieldnames:
+        #     raise ValueError(f'Data file did not contain provided split column: {split_column}. Data file field names are: {fieldnames}')
 
-        all_smiles, all_targets, all_atom_targets, all_bond_targets, all_rows, all_features, all_phase_features, all_constraints_data, all_raw_constraints_data, all_weights, all_gt, all_lt = [], [], [], [], [], [], [], [], [], [], [], []
+        all_smiles, all_targets, all_atom_targets, all_bond_targets, all_rows, all_features, all_phase_features, all_constraints_data, all_raw_constraints_data, all_weights, all_gt, all_lt, all_folds = [], [], [], [], [], [], [], [], [], [], [], [], []
         for i, row in enumerate(tqdm(reader)):
             smiles = [row[c] for c in smiles_columns]
+            
+            fold = row.get(split_column)
 
             targets, atom_targets, bond_targets = [], [], []
             for column in target_columns:
@@ -512,6 +518,7 @@ def get_data(path: str,
                 continue
 
             all_smiles.append(smiles)
+            all_folds.append(fold)
             all_targets.append(targets)
             all_atom_targets.append(atom_targets)
             all_bond_targets.append(bond_targets)
@@ -569,6 +576,9 @@ def get_data(path: str,
             elif args.bond_descriptors == 'descriptor':
                 bond_descriptors = descriptors
 
+        # if all(v is None for v in all_folds):
+        #     all_folds = None
+
         data = MoleculeDataset([
             MoleculeDatapoint(
                 smiles=smiles,
@@ -589,8 +599,9 @@ def get_data(path: str,
                 constraints=all_constraints_data[i] if constraints_data is not None else None,
                 raw_constraints=all_raw_constraints_data[i] if raw_constraints_data is not None else None,
                 overwrite_default_atom_features=args.overwrite_default_atom_features if args is not None else False,
-                overwrite_default_bond_features=args.overwrite_default_bond_features if args is not None else False
-            ) for i, (smiles, targets) in tqdm(enumerate(zip(all_smiles, all_targets)),
+                overwrite_default_bond_features=args.overwrite_default_bond_features if args is not None else False,
+                fold=fold
+            ) for i, (smiles, targets, fold) in tqdm(enumerate(zip(all_smiles, all_targets, all_folds)),
                                             total=len(all_smiles))
         ])
 
@@ -690,10 +701,10 @@ def split_data(data: MoleculeDataset,
     random = Random(seed)
 
     if args is not None:
-        folds_file, val_fold_index, test_fold_index = \
-            args.folds_file, args.val_fold_index, args.test_fold_index
+        folds_file, val_fold_index, test_fold_index, split_column, val_split_key, test_split_key  = \
+            args.folds_file, args.val_fold_index, args.test_fold_index, args.split_column, args.val_split_key, args.test_split_key
     else:
-        folds_file = val_fold_index = test_fold_index = None
+        folds_file = val_fold_index = test_fold_index = split_column = val_split_key =  test_split_key = None
 
     if split_type == 'crossval':
         index_set = args.crossval_index_sets[args.seed]
@@ -746,18 +757,32 @@ def split_data(data: MoleculeDataset,
             raise ValueError('Test size must be zero since test set is created separately '
                              'and we want to put all other data in train and validation')
 
-        if folds_file is None:
-            raise ValueError('arg "folds_file" can not be None!')
-        if test_fold_index is None:
-            raise ValueError('arg "test_fold_index" can not be None!')
+        if folds_file is not None:
+            # raise ValueError('arg "folds_file" can not be None!')
+            if test_fold_index is None:
+                raise ValueError('folds_file provided, arg "test_fold_index" can not be None!')
 
-        try:
-            with open(folds_file, 'rb') as f:
-                all_fold_indices = pickle.load(f)
-        except UnicodeDecodeError:
-            with open(folds_file, 'rb') as f:
-                all_fold_indices = pickle.load(f, encoding='latin1')  # in case we're loading indices from python2
-
+            try:
+                with open(folds_file, 'rb') as f:
+                    all_fold_indices = pickle.load(f)
+            except UnicodeDecodeError:
+                with open(folds_file, 'rb') as f:
+                    all_fold_indices = pickle.load(f, encoding='latin1')  # in case we're loading indices from python2
+        elif split_column is not None:
+            folds = data.folds()
+            split_keys = set(folds)
+            if val_split_key is None:
+                test_fold_index = 1
+                split_keys = list(split_keys-set([test_split_key]))+[test_split_key]
+            else:
+                test_fold_index = 2
+                split_keys = list(split_keys-set([val_split_key, test_split_key]))+[val_split_key, test_split_key]
+                
+            all_fold_indices = [[ix for ix, item in enumerate(folds) if item == value] for value in split_keys]
+        else:
+            raise ValueError('args "folds_file" xor "split_column" must be provided!')
+        
+        print('fold_indices: ', all_fold_indices)
         log_scaffold_stats(data, all_fold_indices, logger=logger)
 
         folds = [[data[i] for i in fold_indices] for fold_indices in all_fold_indices]
@@ -778,6 +803,8 @@ def split_data(data: MoleculeDataset,
             train_size = int(sizes[0] * len(train_val))
             train = train_val[:train_size]
             val = train_val[train_size:]
+
+        print('Split sizes: %d-%d-%d'%(len(train), len(val), len(test)))
 
         return MoleculeDataset(train), MoleculeDataset(val), MoleculeDataset(test)
 

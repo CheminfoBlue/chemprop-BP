@@ -73,7 +73,8 @@ class MoleculeDatapoint:
                  raw_constraints: np.ndarray = None,
                  constraints: np.ndarray = None,
                  overwrite_default_atom_features: bool = False,
-                 overwrite_default_bond_features: bool = False):
+                 overwrite_default_bond_features: bool = False,
+                 fold: Union[str, int] = None):
         """
         :param smiles: A list of the SMILES strings for the molecules.
         :param targets: A list of targets for the molecule (contains None for unknown target values).
@@ -92,6 +93,7 @@ class MoleculeDatapoint:
         :param constraints: A numpy array containing atom/bond-level constraints that are used in training. Param constraints is a subset of param raw_constraints.
         :param overwrite_default_atom_features: Boolean to overwrite default atom features by atom_features.
         :param overwrite_default_bond_features: Boolean to overwrite default bond features by bond_features.
+        :param fold: string or int that indicate the fold/split the datapoint belongs to.
 
         """
         self.smiles = smiles
@@ -115,6 +117,7 @@ class MoleculeDatapoint:
         self.is_explicit_h_list = [is_explicit_h(x) for x in self.is_mol_list]
         self.is_adding_hs_list = [is_adding_hs(x) for x in self.is_mol_list]
         self.is_keeping_atom_map_list = [is_keeping_atom_map(x) for x in self.is_mol_list]
+        self.fold = fold
 
         if data_weight is not None:
             self.data_weight = data_weight
@@ -539,6 +542,14 @@ class MoleculeDataset(Dataset):
         :return: A list of lists of floats (or None) containing the targets.
         """
         return [d.targets for d in self._data]
+    
+    def folds(self) -> Union[List[str], List[int]]:
+        """
+        Returns the folds/splits that each molecule belongs to.
+
+        :return: A list strings/ints indicating the folds/splits.
+        """
+        return [d.fold for d in self._data]
     
     def mask(self) -> List[List[bool]]:
         """

@@ -156,6 +156,7 @@ def log_scaffold_stats(data: MoleculeDataset,
                      f'capped at {num_scaffolds} scaffolds and {num_labels} labels:')
 
     stats = []
+    print('index_sets: ', index_sets)
     index_sets = sorted(index_sets, key=lambda idx_set: len(idx_set), reverse=True)
     for scaffold_num, index_set in enumerate(index_sets[:num_scaffolds]):
         data_set = [data[i] for i in index_set]

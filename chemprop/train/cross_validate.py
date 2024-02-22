@@ -80,6 +80,10 @@ def cross_validate(args: TrainArgs,
         skip_none_targets=True,
         data_weights_path=args.data_weights_path
     )
+    
+    folds = data.folds()
+    print('data folds/splits: ', folds)
+
     validate_dataset_type(data, dataset_type=args.dataset_type)
     args.features_size = data.features_size()
 

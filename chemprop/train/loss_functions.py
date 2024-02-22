@@ -52,7 +52,8 @@ def get_loss_func(args: TrainArgs) -> Callable:
 
     if loss_function is not None:
         print('Loss function: ', loss_function)
-        print('Using class weights: ', loss_function.weight)
+        if hasattr(loss_function, 'weight'):
+            print('Using class weights: ', loss_function.weight)
         return loss_function
 
     else:

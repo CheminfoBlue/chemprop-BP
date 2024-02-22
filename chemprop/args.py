@@ -280,6 +280,8 @@ class TrainArgs(CommonArgs):
     """Method of splitting the data into train/val/test."""
     split_sizes: List[float] = None
     """Split proportions for train/validation/test sets."""
+    split_column: str = None
+    """Split column for train/test folds/splits."""
     split_key_molecule: int = 0
     """The index of the key molecule used for splitting when multiple molecules are present and constrained split_type is used, like scaffold_balanced or random_with_repeated_smiles.
        Note that this index begins with zero for the first molecule."""
@@ -291,6 +293,10 @@ class TrainArgs(CommonArgs):
     """Which fold to use as val for leave-one-out cross val."""
     test_fold_index: int = None
     """Which fold to use as test for leave-one-out cross val."""
+    val_split_key: str = None
+    """name/value of validation split/fold"""
+    test_split_key: str = None
+    """name/value of test split/fold"""
     crossval_index_dir: str = None
     """Directory in which to find cross validation index files."""
     crossval_index_file: str = None
@@ -759,8 +765,8 @@ class TrainArgs(CommonArgs):
                              'since atom_messages are by their nature undirected.')
 
         # Validate split type settings
-        if not (self.split_type == 'predetermined') == (self.folds_file is not None) == (self.test_fold_index is not None):
-            raise ValueError('When using predetermined split type, must provide folds_file and test_fold_index.')
+        if not (self.split_type == 'predetermined') == ( ((self.folds_file is not None) == (self.test_fold_index is not None)) or ((self.split_column is not None) == (self.test_split_key is not None)) ):
+            raise ValueError('When using predetermined split type, must provide either folds_file + test_fold_index or split_column + test_split_key.')
 
         if not (self.split_type == 'crossval') == (self.crossval_index_dir is not None):
             raise ValueError('When using crossval split type, must provide crossval_index_dir.')
