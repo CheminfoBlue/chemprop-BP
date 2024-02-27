@@ -765,8 +765,8 @@ class TrainArgs(CommonArgs):
                              'since atom_messages are by their nature undirected.')
 
         # Validate split type settings
-        if not (self.split_type == 'predetermined') == ( ((self.folds_file is not None) == (self.test_fold_index is not None)) or ((self.split_column is not None) == (self.test_split_key is not None)) ):
-            raise ValueError('When using predetermined split type, must provide either folds_file + test_fold_index or split_column + test_split_key.')
+        # if not (self.split_type == 'predetermined') == ( ((self.folds_file is not None) == (self.test_fold_index is not None)) or ((self.split_column is not None) == (self.test_split_key is not None)) ):
+        #     raise ValueError('When using predetermined split type, must provide either folds_file + test_fold_index or split_column + test_split_key.')
 
         if not (self.split_type == 'crossval') == (self.crossval_index_dir is not None):
             raise ValueError('When using crossval split type, must provide crossval_index_dir.')
