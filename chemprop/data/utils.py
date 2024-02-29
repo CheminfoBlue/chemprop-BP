@@ -20,18 +20,21 @@ from chemprop.args import PredictArgs, TrainArgs
 from chemprop.features import load_features, load_valid_atom_or_bond_features, is_mol
 from chemprop.rdkit import make_mol
 
+import io
+
 # Increase maximum size of field in the csv processing for the current architecture
 csv.field_size_limit(int(ctypes.c_ulong(-1).value // 2))
 
-def get_header(path: str) -> List[str]:
+def get_header(csv_file: Union[str, io.StringIO]) -> List[str]:
     """
     Returns the header of a data CSV file.
     :param path: Path to a CSV file.
     :return: A list of strings containing the strings in the comma-separated header.
     """
-    with open(path) as f:
+    with (open(csv_file) if isinstance(csv_file, str) else csv_file) as f:
+        # Reset the file pointer to the beginning of the file
+        f.seek(0)
         header = next(csv.reader(f))
-
     return header
 
 
@@ -50,7 +53,7 @@ def preprocess_smiles_columns(path: str,
     """
 
     if smiles_columns is None:
-        if os.path.isfile(path):
+        if (isinstance(path, str) and os.path.isfile(path)) | isinstance(path, io.StringIO):
             columns = get_header(path)
             smiles_columns = columns[:number_of_molecules]
         else:
@@ -58,7 +61,7 @@ def preprocess_smiles_columns(path: str,
     else:
         if isinstance(smiles_columns, str):
             smiles_columns = [smiles_columns]
-        if os.path.isfile(path):
+        if (isinstance(path, str) and os.path.isfile(path)) | isinstance(path, io.StringIO):
             columns = get_header(path)
             if len(smiles_columns) != number_of_molecules:
                 raise ValueError('Length of smiles_columns must match number_of_molecules.')
@@ -89,6 +92,7 @@ def get_task_names(path: str,
     if target_columns is not None:
         return target_columns
 
+    
     columns = get_header(path)
 
     if isinstance(smiles_columns, str) or smiles_columns is None:
@@ -339,6 +343,8 @@ def get_invalid_smiles_from_list(smiles: List[List[str]], reaction: bool = False
 
     return invalid_smiles
 
+def xpath(path):
+    return path if os.path.isfile(path) else io.StringIO(path)
 
 def get_data(path: str,
              smiles_columns: Union[str, List[str]] = None,
@@ -389,7 +395,7 @@ def get_data(path: str,
              with other info such as additional features when desired.
     """
     debug = logger.debug if logger is not None else print
-
+    
     if args is not None:
         # Prefer explicit function arguments but default to args if not provided
         smiles_columns = smiles_columns if smiles_columns is not None else args.smiles_columns
@@ -408,7 +414,7 @@ def get_data(path: str,
         loss_function = loss_function if loss_function is not None else args.loss_function
 
     if isinstance(smiles_columns, str) or smiles_columns is None:
-        smiles_columns = preprocess_smiles_columns(path=path, smiles_columns=smiles_columns)
+        smiles_columns = preprocess_smiles_columns(path=xpath(path), smiles_columns=smiles_columns)
 
     max_data_size = max_data_size or float('inf')
 
@@ -453,7 +459,7 @@ def get_data(path: str,
     # By default, the targets columns are all the columns except the SMILES column
     if target_columns is None:
         target_columns = get_task_names(
-            path=path,
+            path=xpath(path),
             smiles_columns=smiles_columns,
             target_columns=target_columns,
             ignore_columns=ignore_columns,
@@ -465,8 +471,14 @@ def get_data(path: str,
     else:
         gt_targets, lt_targets = None, None
 
-    # Load data
-    with open(path) as f:
+    # Load data (open(path, 'r') if isinstance(path, str) else path)
+    # with open(path) as f:
+    print("test_path is string? ", isinstance(xpath(path), str))
+    # print('test_path: ', xpath(path))
+    with (open(path) if os.path.isfile(path) else io.StringIO(path)) as f:
+        # Reset the file pointer to the beginning of the file
+        f.seek(0)
+
         reader = csv.DictReader(f)
         fieldnames = reader.fieldnames
         if any([c not in fieldnames for c in smiles_columns]):
@@ -657,7 +669,8 @@ def get_inequality_targets(path: str, target_columns: List[str] = None) -> List[
     gt_targets = []
     lt_targets = []
 
-    with open(path) as f:
+    # with open(path) as f:
+    with (open(path) if os.path.isfile(path) else io.StringIO(path)) as f:
         reader = csv.DictReader(f)
         for line in reader:
             values = [line[col] for col in target_columns]

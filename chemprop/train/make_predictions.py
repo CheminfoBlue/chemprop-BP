@@ -12,6 +12,7 @@ from chemprop.models import MoleculeModel
 from chemprop.uncertainty import UncertaintyCalibrator, build_uncertainty_calibrator, UncertaintyEstimator, build_uncertainty_evaluator
 from chemprop.multitask_utils import reshape_values
 
+import io
 
 def load_model(args: PredictArgs, generator: bool = False):
     """
@@ -64,7 +65,7 @@ def load_data(args: PredictArgs, smiles: List[List[str]]):
         )
     else:
         full_data = get_data(
-            path=args.test_path,
+            path=args.test_path if args.test_path is not None else args.test_csv_data,
             smiles_columns=args.smiles_columns,
             target_columns=[],
             ignore_columns=[],

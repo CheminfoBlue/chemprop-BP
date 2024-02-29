@@ -15,6 +15,8 @@ import chemprop.data.utils
 from chemprop.data import set_cache_mol, empty_cache
 from chemprop.features import get_available_features_generators
 
+import sys
+import io
 
 Metric = Literal['auc', 'prc-auc', 'rmse', 'mae', 'mse', 'r2', 'accuracy', 'cross_entropy', 'binary_cross_entropy', 'sid', 'wasserstein', 'f1', 'mcc', 'bounded_rmse', 'bounded_mae', 'bounded_mse']
 
@@ -884,7 +886,7 @@ class TrainArgs(CommonArgs):
 class PredictArgs(CommonArgs):
     """:class:`PredictArgs` includes :class:`CommonArgs` along with additional arguments used for predicting with a Chemprop model."""
 
-    test_path: str
+    test_path: str = None
     """Path to CSV file containing testing data for which predictions will be made."""
     preds_path: str
     """Path to CSV or PICKLE file where predictions will be saved."""
@@ -940,6 +942,16 @@ class PredictArgs(CommonArgs):
     def process_args(self) -> None:
         super(PredictArgs, self).process_args()
 
+        if self.test_path is not None:
+            print("Input is file path:")
+            print("Test data path:", self.test_path)
+            self.test_csv_data = self.test_csv_file_obj = None
+        else:
+            # If no test_path is provided, assume CSV data is piped via stdin
+            print("Input is (stdin) CSV data object:")
+            self.test_csv_data = sys.stdin.read()
+            # self.test_csv_file_obj = io.StringIO(self.test_csv_data)
+
         if self.regression_calibrator_metric is None:
             if self.calibration_method == 'zelikman_interval':
                 self.regression_calibrator_metric = 'interval'
@@ -950,7 +962,7 @@ class PredictArgs(CommonArgs):
             raise ValueError('Dropout uncertainty is only supported for pytorch versions >= 1.9.0')
 
         self.smiles_columns = chemprop.data.utils.preprocess_smiles_columns(
-            path=self.test_path,
+            path=self.test_path if self.test_path is not None else io.StringIO(self.test_csv_data),
             smiles_columns=self.smiles_columns,
             number_of_molecules=self.number_of_molecules,
         )
