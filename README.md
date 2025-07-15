@@ -9,6 +9,12 @@ In this repository we update and build upon the Chemprop codebase with certain d
 
 [Modifications](#modifications) <br>
 
+(0a) Binary Classification - flag: --dataset_type classification <br>
+Example: ```chemprop_train --data_path <data_path> --dataset_type classification```
+
+(0b) Binary Classification + class weighted loss: <br>
+Example: ```chemprop_train --data_path <data_path> --dataset_type classification --class_weighted_loss```
+
 (1) Class weighted loss (cross entropy) - flag: --class_weighted_loss <br>
 Example: ```chemprop_train --data_path <data_path> --dataset_type multiclass --multiclass_num_classes 3 --class_weighted_loss```
 
