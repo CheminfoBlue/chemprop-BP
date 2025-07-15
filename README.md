@@ -7,10 +7,10 @@ In this repository we update and build upon the Chemprop codebase with certain d
 **References**: Chemprop was initially described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) for molecules and [Machine Learning of Reaction Properties via Learned Representations of the Condensed Graph of Reaction](https://doi.org/10.1021/acs.jcim.1c00975) for reactions. It now has its own dedicated manuscript: [Chemprop: A Machine Learning Package for Chemical Property Prediction](https://doi.org/10.1021/acs.jcim.3c01250).
 
 [Installation](#installations) <br>
-clone repo
-conda create -n chemprop python=3.11
-conda activate chemprop
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+clone repo <br>
+conda create -n chemprop python=3.11 <br>
+conda activate chemprop <br>
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126 <br>
 python setup.py install
 
 
