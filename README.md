@@ -8,22 +8,23 @@ In this repository we update and build upon the Chemprop codebase with certain d
 
 [Installation](#installations) <br>
 clone repo <br>
-conda create -n chemprop-bp python=3.9 <br>
+conda create -n chemprop-bp python=3.9 pip <br>
 conda activate chemprop-bp <br>
+#CHECK GPU - run: nvidia-smi <br>
 python -m pip install torch torchvision torchaudio <br> <br>
-conda install -c conda-forge \
-  flask>=1.1.2 \
-  gunicorn>=20.0.4 \
-  hyperopt>=0.2.3 \
-  matplotlib>=3.1.3 \
-  numpy>=1.18.1 \
-  pandas>=1.0.3 \
-  pandas-flavor>=0.2.0 \
-  pip>=20.0.2 \
-  rdkit>=2020.03.1.0 \
-  scikit-learn>=0.22.2.post1 \
-  scipy>=1.4.1 \
-  tensorboardX>=2.0 \
+conda install -c conda-forge \\
+  flask>=1.1.2 \\
+  gunicorn>=20.0.4 \\
+  hyperopt>=0.2.3 \\
+  matplotlib>=3.1.3 \\
+  numpy>=1.18.1 \\
+  pandas>=1.0.3 \\
+  pandas-flavor>=0.2.0 \\
+  pip>=20.0.2 \\
+  rdkit>=2020.03.1.0 \\
+  scikit-learn>=0.22.2.post1 \\
+  scipy>=1.4.1 \\
+  tensorboardX>=2.0 \\
   tqdm>=4.45.0
 
 
