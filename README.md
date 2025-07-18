@@ -7,7 +7,10 @@ In this repository we update and build upon the Chemprop codebase with certain d
 **References**: Chemprop was initially described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) for molecules and [Machine Learning of Reaction Properties via Learned Representations of the Condensed Graph of Reaction](https://doi.org/10.1021/acs.jcim.1c00975) for reactions. It now has its own dedicated manuscript: [Chemprop: A Machine Learning Package for Chemical Property Prediction](https://doi.org/10.1021/acs.jcim.3c01250).
 
 [Installation](#installations) <br>
-(0) clone repo <br>
+(0) clone repo 
+```
+git clone git@github.com:CheminfoBlue/chemprop-BP.git
+```
 (1) Create and activate conda env
 ```
 conda create -n chemprop-bp python=3.9 pip
