@@ -18,9 +18,12 @@ conda create -n chemprop-bp python=3.9 pip
 ```
 conda activate chemprop-bp
 ```
-(2) Check for GPU on machine
+(2a) Check for GPU on machine, and CUDA version
 ```
 nvidia-smi
+```
+```
+nvcc --version
 ```
 (3) Install (GPU compatible) PyTorch **USING CUDA 12.6.0**
 ```bash
