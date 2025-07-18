@@ -8,8 +8,8 @@ In this repository we update and build upon the Chemprop codebase with certain d
 
 [Installation](#installations) <br>
 clone repo <br>
-conda create -n chemprop python=3.11 <br>
-conda activate chemprop <br>
+conda create -n chemprop-bp python=3.11 <br>
+conda activate chemprop-bp <br>
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126 <br>
 python setup.py install
 
