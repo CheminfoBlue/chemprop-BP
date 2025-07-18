@@ -54,6 +54,7 @@ setup(
         "descriptastorus<2.6.1 ; python_version=='3.7'",
         "scipy>=1.9 ; python_version=='3.8'",
         "descriptastorus>=2.6.1 ; python_version=='3.8'",
+        "descriptastorus>=2.7.0 ; python_version=='3.9'"
     ],
     extras_require={"test": ["pytest>=6.2.2", "parameterized>=0.8.1"]},
     python_requires=">=3.7",
@@ -61,6 +62,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
