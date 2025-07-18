@@ -25,7 +25,9 @@ conda install -c conda-forge \\ <br>
   scikit-learn>=0.22.2.post1 \\ <br>
   scipy>=1.4.1 \\ <br>
   tensorboardX>=2.0 \\ <br>
-  tqdm>=4.45.0
+  tqdm>=4.45.0 <br>
+
+  python -m pip install -e .
 
 
 
