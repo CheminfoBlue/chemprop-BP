@@ -22,7 +22,7 @@ conda activate chemprop-bp
 ```
 nvidia-smi
 ```
-(3) Install (GPU compatible) PyTorch
+(3) Install (GPU compatible) PyTorch **USING CUDA 12.6.0**
 ```bash
 python -m pip install torch torchvision torchaudio
 ```
